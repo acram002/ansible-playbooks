@@ -26,7 +26,7 @@ copy_key() {
 #	if ssh "$remoteUser@$ip" "grep -Fxq \"$(<\"
 
 	if command -v ssh-copy-id &> /dev/null; then
-		if sshpass -p "$remotePw" ssh-copy-id -i "$keyPath" "$remoteUser@$ip"; then
+		if sshpass -p "$remotePw" ssh-copy-id -o StrictHostKeyChecking=no -i "$keyPath" "$remoteUser@$ip"; then
 			echo "Public key copied to $ip for $remoteUser"
 		else
 			echo "Error: Failed to copy public key to $ip for $remoteUser"
@@ -61,9 +61,9 @@ EOF
 #	create_key
 #	copy_key
 #}
-create_key
+create_key || { echo "key creation failed"; exit 1; }
 echo "key created"
-copy_key
+copy_key || { echo "key copy failed"; exit 1; }
 echo "key copied"
 change_remote_config
 echo "remote config changed"
