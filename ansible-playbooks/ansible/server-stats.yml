@@ -1,0 +1,10 @@
+- name: Server stats for vms
+  hosts: all
+  tasks:
+   - name: Transfer and run local bash script
+     ansible.builtin.script: /home/svc-ansible/bash/server-stats-bash-script/server-stats.sh
+     register: stats_output
+
+   - name: Show output
+     ansible.builtin.debug:
+       var: stats_output.stdout_lines
