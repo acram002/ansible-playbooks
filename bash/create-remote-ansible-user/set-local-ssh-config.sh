@@ -7,7 +7,7 @@ set_local_ssh_config(){
 	local configFile="${configDir}/config"
 
 	if grep -q "^Host ${remote_host}\$" "$configFile" 2>/dev/null; then
-		echo "noticeL config entry for ${remote_host} already exists"
+		echo "notice: config entry for ${remote_host} already exists"
 	else
 		cat >> "$configFile" << EOF
 
