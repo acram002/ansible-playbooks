@@ -39,14 +39,18 @@ ssh -p "$initial_port" -t "${initial_user}@${remote_host}" \
 	"chmod +x ${remote_tmp_dir}/${new_user_script_name} && \
 	${remote_tmp_dir}/${new_user_script_name} ${ansible_user} ${remote_tmp_dir}/ansible_key.pub"
 
-# call fxn
+# test ansible user ssh & sudo on remote vm
 source "$(dirname "$0")/test-ansible-ssh-sudo.sh"
 test_ansible_ssh_sudo
 
-# call fxn
+# harden ssh config on remote vm
 source "$(dirname "$0")/harden-remote-config.sh"
 harden_remote_config
 
-# call fxn
+# set local ssh config so can ssh <hostname>
 source "$(dirname "$0")/set-local-ssh-config.sh"
 set_local_ssh_config
+
+# adds new remote vm to ansible inventory
+source "$(dirname "$0")/add-ssh-hosts-2-ansible.sh"
+add_ssh_hosts_2_ansible
