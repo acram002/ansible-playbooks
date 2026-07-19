@@ -1,0 +1,60 @@
+- name: deploy nftables hardening (safely)
+  hosts: all
+  become: true
+  gather_facts: true
+  serial: 1
+
+ vars:
+  rollback_minutes: "{{ rollback_minutes | default(5) }}"
+  extra_tcp_ports: "{{ extra_tcp_ports | default('') }}"
+  extra_udp_ports: "{{ extra_udp_ports | default('') }}"
+  remote_script_dir: /opt/nft-deploy
+
+ tasks:
+  - name: ensure remote script dir exists
+    ansible.builtin.file:
+      path: "[[ remote_script_dir }}"
+      state: directory
+      mode: "0750"
+
+  - name: copy hardening script
+    ansible.builtin.copy:
+      src: /home/svc-ansible/ansible-playbooks/bash/server-hardening/harden-nftables.sh
+      dest: "{{ remote_script_dir }}///harden-nftables.sh"
+      mode: "0750"
+
+   - name: copy confirm script
+     ansible.builtin.copy:
+       src: /home/svc-ansible/ansible-playbooks/bash/server-hardening/confirm-nftables.sh
+       dest: "{{ remote_script_dir }}/confirm-nftables.sh }}"
+       mode: "0750"
+
+  - name: apply nftables ruleset (w/ rollback timer)
+    ansible.builtin.command:
+      cmd: >
+       {{ remote_script_dir }}/harden-nftables.sh
+       {{ rollback_minutes }}
+       "{{ extra_tcp_ports }}"
+       "{{ extra_udp_ports }}"
+    register: apply_result
+    changed_when: true
+
+  - name: show apply output
+    ansible.builtin.debug:
+      var: apply_result.stdout_lines
+
+  - name: reset ssh connection to force fresh handshake against new ruleset
+    ansible.built.meta: reset_connection
+
+  - name: confirm change (cancels scheduled rollback)
+    ansible.builtin.command
+      cmd: {{ remote_script_dir }}/confirm-nftables.sh"
+    when: reachability is succeeded
+    changed_when: true
+
+  - name: warn if reachability not verified
+    ansible.builtin.debug:
+      msg: >
+        warning: couldn't verify ssh connection after applying ruleset, not confirming change.
+        node will automatically roll back to its previous ruleset w/in {{ rollback_minutes }} minute(s)
+    when: reachability is not succeeded
