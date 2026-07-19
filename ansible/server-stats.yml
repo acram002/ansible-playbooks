@@ -2,7 +2,7 @@
   hosts: all
   tasks:
    - name: Transfer and run local bash script
-     ansible.builtin.script: /github/bash/server-stats-bash-script/server-stats.sh
+     ansible.builtin.script: /home/svc-ansible/bash/server-stats-bash-script/server-stats.sh
      register: stats_output
 
    - name: Show output
